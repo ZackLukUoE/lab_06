@@ -81,9 +81,27 @@ glimpse(candy_df)
 ## Exercise 1
 
 How many observations and variables are in this dataset?
-Did you identify the type of variables, remember that this detail is crucial to create which kind of data visualization in general. 
+Did you identify the type of variables, remember that this detail is crucial to create which kind of data visualization in general.
+
+```{r}
+glimpse(candy_df)
+```
 
 _Write your comments about results_
+There are 85 observations, 13 variables.
+competitorname - categorical
+chocolate - categorical
+fruity - categorical
+caramel - categorical
+peanutyalmondy - categorical
+nougat - categorical
+crispedricewafer - categorical
+hard - categorical
+bar - categorical
+pluribus - categorical
+surgarpercent - numerical
+pricepercent - numerical
+winpercent - numerical
 
 # Data viz - One variable at a time
 
@@ -92,6 +110,8 @@ Just to use the logical variables as categories, run the following code chunk fi
 ```{r}
 candy_df <- candy_df %>%
   mutate(across(where(is.logical), as_factor))
+
+candy_df
 ```
 
 ## Exercise 2
@@ -99,9 +119,21 @@ candy_df <- candy_df %>%
 Complete the following code to get the data viz to represent "how many candies contain caramel via bar plot". Fill in the blanks, remove the # symbol in front of your code and the execute the code chunk via green play button.
 
 ```{r}
-# ggplot(candy_rankings, aes(x = ______)) +
-#  _____() +
+ggplot(candy_rankings, aes(x = caramel)) +
+  geom_bar()
+
+ggplot(candy_rankings, aes(x = chocolate)) +
+  geom_bar() +
+  labs(
+    x = "Contains Chocolate",
+    y = "Frequency",
+    title = "Number of chocolate candy chosen"
+  )
 ```
+
+There are fewer candy with caramel than all non-caramel ones.
+
+Candy containing chocolate has a higher pick rate compared to caramel candy, but non-chocolate candy still has a higher pick rate than ones containing chocolate.
 
 ## Exercise 3
 
@@ -109,7 +141,13 @@ Now look at a numerical variable, such as `winpercent`. Create an histogram for 
 
 ```{r}
 # Your code here
-
+ggplot(candy_rankings, aes(x = winpercent)) +
+  geom_histogram() +
+  labs(
+    x = "Win Percentage",
+    y = "Frequency",
+    title = "Frequency for each win percentage"
+  )
 ```
 
 
@@ -123,9 +161,9 @@ Fill in the blanks, remove the # symbol in front of your code and the execute th
 
 ```{r}
 # Your code here
-#ggplot(candy_df, aes(x = ___________)) +
-#  geom_histogram() +
-#  facet_wrap(___________)
+ggplot(candy_df, aes(x = winpercent, fill = caramel)) +
+  geom_histogram() +
+  facet_wrap(~ chocolate)
 
 ```
 
@@ -138,7 +176,14 @@ Create a visualization that examines the relationship between a candy’s win pe
 
 ```{r}
 # your code here
+ggplot(candy_rankings, aes(x = chocolate, y = winpercent)) +
+  geom_col()
 
+ggplot(candy_rankings, aes(x = caramel, y = winpercent)) +
+  geom_col()
+
+ggplot(candy_rankings, aes(x = fruity, y = winpercent)) +
+  geom_col()
 ```
 
 - Consider the similar pair by replacing chocolate with caramel, fruity and compare their results. 
@@ -147,6 +192,22 @@ Create a visualization that examines the relationship between a candy’s win pe
 ```{r}
 candy_rankings %>%
   group_by(chocolate) %>%
+  summarise(
+    n = n(),
+    mean_win = mean(winpercent),
+    median_win = median(winpercent)
+  )
+
+candy_rankings %>%
+  group_by(caramel) %>%
+  summarise(
+    n = n(),
+    mean_win = mean(winpercent),
+    median_win = median(winpercent)
+  )
+
+candy_rankings %>%
+  group_by(fruity) %>%
   summarise(
     n = n(),
     mean_win = mean(winpercent),
@@ -161,13 +222,19 @@ Do more expensive candies win more often? Make a scatterplot of pricepercent (x)
 
 ```{r}
 # your code here
-
+ggplot(candy_df, aes(x = pricepercent, y = winpercent, colour = chocolate)) +
+  geom_point()
 ```
 
 
 - Add `color = chocolate` to add a third variable to the created visualization
 - How to facet this by using another categorical variable such as `bar`? 
 
+Most candy containing chocolate are in bar form.
+
+Candy containing chocolate has higher win percentages on average, compared to the rest.
+
+There is no obvious correlation between price and win percentage, but candy between 0.5 percent and 0.75 percent have the highest win percentage.
 
 ## Exercise 7
 
@@ -175,16 +242,26 @@ Are chocolate candies more likely to be candy bars? Make a filled bar plot with 
 
 ```{r}
 # Your code here
-
+ggplot(candy_df, aes(x = chocolate, fill = bar)) +
+  geom_bar()
 ```
 
+Answer is yes
 
 ## Exercise 8
 Create a new variable called price per sugar ratio as the division of pricepercent and sugarpercent. Plot it against winpercent, and set the color of all points to blue for the competitors who are not "One dime" or "One quarter". Include x and y labels and a title. Describe any relationship you see.
 
 ```{r}
 # your code here
+candy_df <- candy_df |> 
+  mutate(
+    price_sugar_ratio = pricepercent / sugarpercent
+  )
 
+candy_df |> 
+  ggplot(aes(x = price_sugar_ratio, y = winpercent)) +
+  geom_point(mapping = aes(colour = ifelse(competitorname == "One dime" | competitorname == "One quarter", "black", "blue"))) +
+  scale_colour_identity()
 ```
 
 
@@ -194,7 +271,16 @@ Modify your plot in Exercise 8 to facet by whether a candy is bar-shaped. Have t
 
 ```{r}
 # your code here
-
+candy_df |> 
+  ggplot(aes(x = price_sugar_ratio, y = winpercent)) +
+  geom_point(mapping = aes(colour = ifelse(fruity == TRUE, "black", "blue"))) +
+  facet_wrap(~ bar) +
+  scale_colour_identity() +
+  labs(
+    x = "price-to-sugar ratio",
+    y = "win percentage",
+    title = "How price-to-sugar ratio affects win percentage, taking into account if the candy is fruity and in bar form"
+  )
 ```
 
 
@@ -211,13 +297,15 @@ staff <- read_csv("data/instructional-staff.csv")
 
 What is the difference between *wide format* data and *long format* data?
 
+wide format data may have names/ values of variables as columns, whereas long format may have multiple entries invovling the same name or value.
 
 Is the format `staff` data *wide* or *long*?
 
+It is wide
 
 How many observations are there in the data set?
 
-
+There are 5 observations in the data set
 
 
 ## Exercise 2
@@ -225,13 +313,12 @@ How many observations are there in the data set?
 ```{r pivoting}
 ## Uncomment and complete the following code
 
-#staff_long <- ___ %>%
-#  ___(
-#    cols = ____, 
-#    names_to = "_____",
-#    values_to = "percent"
-#    )
-
+staff_long <- staff %>%
+ pivot_longer(
+    cols = -faculty_type, 
+    names_to = "year",
+    values_to = "percent"
+    )
 ```
 
 
@@ -239,8 +326,9 @@ How many observations are there in the data set?
 
 ```{r dot-plot}
 # Write your code for Exercise 3 here
-
-
+staff_long |> 
+  ggplot(aes( x = year, y = percent, color = faculty_type)) +
+  geom_point()
 
 ```
 
@@ -248,7 +336,9 @@ How many observations are there in the data set?
 
 ```{r bad-line-plot}
 # Write your code for Exercise 4 here
-
+staff_long |> 
+  ggplot(aes( x = year, y = percent, color = faculty_type)) +
+  geom_line()
 
 
 ```
@@ -258,14 +348,18 @@ How many observations are there in the data set?
 ```{r mutate-year}
 ## Uncomment and complete the following code
 
-#staff_long <- staff_long %>%
-#  mutate(year = ______(year))
+staff_long <- staff_long %>%
+ mutate(year = as.numeric(year))
+
+staff_long
 ```
 
 
 ```{r working-line-plot}
 # Write your code for Exercise 5 here
-
+staff_long |> 
+  ggplot(aes( x = year, y = percent, color = faculty_type)) +
+  geom_line()
 
 
 ```
@@ -274,9 +368,15 @@ How many observations are there in the data set?
 
 ```{r better-line-plot}
 # Write your code for Exercise 6 here
-
-
-
+staff_long |> 
+  ggplot(aes( x = year, y = percent, color = faculty_type)) +
+  geom_line() +
+  labs(
+    x = "Year",
+    y = "Percentage",
+    colour = "Faculty Type",
+    title = "Change in Percentage of each Faculty Type over Time"
+  )
 
 ```
 
@@ -284,16 +384,21 @@ How many observations are there in the data set?
 
 _Write below your ideas for adapting the line plot_
 
-* Idea 1
-* Idea 2
-* Idea 3
+* Only highlight the part-time faculty line, others same colour
+* Add a pattern on the line
+* Could group non-part-time faculties into one and consider the trend tha way
 * ...
 
 
 ```{r implement-Ex7}
 # Write your code for Exercise 7 here, based on one of your ideas
 
+#graph 1
+staff_long |> 
+  ggplot(aes(x = year, y = percent, group = faculty_type, colour = ifelse(faculty_type == "Part-Time Faculty", "red","grey"))) +
+  geom_line() +
+  scale_colour_identity()
 
-
+#graph 2 - add pattern
 ```
 
