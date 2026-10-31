@@ -386,8 +386,6 @@ _Write below your ideas for adapting the line plot_
 
 * Only highlight the part-time faculty line, others same colour
 * Add a pattern on the line
-* Could group non-part-time faculties into one and consider the trend tha way
-* ...
 
 
 ```{r implement-Ex7}
@@ -400,5 +398,12 @@ staff_long |>
   scale_colour_identity()
 
 #graph 2 - add pattern
+library(ggpattern)
+
+staff_long |> 
+  ggplot(aes(x = year, y = percent, group = faculty_type, colour = ifelse(faculty_type == "Part-Time Faculty", "red", "grey"))) +
+  geom_line(aes(linetype = c("Part-Time Faculty"), linewidth = 1)) +
+  theme_minimal() +
+  scale_colour_identity()
 ```
 
